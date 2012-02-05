@@ -1,0 +1,36 @@
+#!/bin/bash
+
+err() {
+	echo $1
+	usage
+	exit
+}
+
+usage() {
+	cat <<EOF
+
+Usage: xdg-open [file]
+
+It opens a file according to the extension
+To setup the extension, create ~/.config/mimi/mime.conf
+e.g.
+	default:urxvt -e ranger
+	pdf:mupdf
+mimi :)
+EOF
+}
+
+[ -f ~/.config/mimi/mime.conf ] || err "no conf file"
+filename="$1"
+[[ -f "$filename" ]] || err "The file does not exit"
+
+ext=${filename##*.}
+path=${filename%/*}
+program=$(grep "^$ext:" ~/.config/mimi/mime.conf | cut -d : -f 2)
+
+if [[ $program == "" ]]; then
+	filemanager=$(grep "^default:" ~/.config/mimi/mime.conf | cut -d : -f 2)
+	$filemanager "$path"
+else
+	$program "$filename"
+fi
