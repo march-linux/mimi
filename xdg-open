@@ -20,7 +20,7 @@ mimi :)
 EOF
 }
 
-[ -f ~/.config/mimi/mime.conf ] || err "no conf file"
+[[ -f ~/.config/mimi/mime.conf ]] || err "no conf file"
 filename="$1"
 [[ -f "$filename" ]] || err "The file does not exit"
 
