@@ -21,9 +21,9 @@ EOF
 }
 CONFIG="$HOME/.config/mimi/mime.conf"
 
-[[ -f "$CONFIG" ]] || err "no conf file"
-filename="$1"
-[[ -f "$filename" ]] || err "The file does not exit"
+[[ -f "$CONFIG" ]] || err "No configuration file found."
+filename="$@"
+[[ -f "$filename" ]] || err "The file does not exist."
 
 ext=${filename##*.}
 path=${filename%/*}
