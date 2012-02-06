@@ -19,17 +19,18 @@ e.g.
 mimi :)
 EOF
 }
+CONFIG="$HOME/.config/mimi/mime.conf"
 
-[[ -f ~/.config/mimi/mime.conf ]] || err "no conf file"
+[[ -f "$CONFIG" ]] || err "no conf file"
 filename="$1"
 [[ -f "$filename" ]] || err "The file does not exit"
 
 ext=${filename##*.}
 path=${filename%/*}
-program=$(grep "^$ext:" ~/.config/mimi/mime.conf | cut -d : -f 2)
+program=$(grep "^$ext:" "$CONFIG" | cut -d : -f 2)
 
 if [[ $program == "" ]]; then
-	filemanager=$(grep "^default:" ~/.config/mimi/mime.conf | cut -d : -f 2)
+	filemanager=$(grep "^default:" "$CONFIG" | cut -d : -f 2)
 	$filemanager "$path"
 else
 	$program "$filename"
