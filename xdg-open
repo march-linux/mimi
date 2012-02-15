@@ -9,7 +9,7 @@ err() {
 usage() {
 	cat <<EOF
 
-Usage: xdg-open [file]
+Usage: xdg-open [file|url]
 
 It opens a file according to the extension
 To setup the extension, create ~/.config/mimi/mime.conf
@@ -19,19 +19,35 @@ e.g.
 mimi :)
 EOF
 }
+
+find_program() {
+	grep "^$1:" "$CONFIG" | cut -d : -f 2
+}
+
 CONFIG="$HOME/.config/mimi/mime.conf"
-
 [[ -f "$CONFIG" ]] || err "No configuration file found."
-filename="$@"
-[[ -f "$filename" ]] || err "The file does not exist."
 
-ext=${filename##*.}
-path=${filename%/*}
-program=$(grep "^$ext:" "$CONFIG" | cut -d : -f 2)
-
-if [[ $program == "" ]]; then
-	filemanager=$(grep "^default:" "$CONFIG" | cut -d : -f 2)
-	$filemanager "$path"
+if [[ "$@" == http* ]]; then
+	# handle url
+	browser=$(find_program html)
+	if [[ "$browser" == "" ]]; then
+		err "'html' is not defined in configuration file."
+	else
+		$browser "$@"
+	fi
 else
-	$program "$filename"
+	# handle file
+	filename="$@"
+	[[ -f "$filename" ]] || err "The file does not exist."
+	
+	ext=${filename##*.}
+	program=$(find_program "$ext")
+	
+	if [[ "$program" == "" ]]; then
+		filemanager=$(find_program default)
+		path=${filename%/*}
+		$filemanager "$path"
+	else
+		$program "$filename"
+	fi
 fi
