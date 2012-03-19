@@ -44,9 +44,8 @@ else
 	program=$(find_program "$ext")
 	
 	if [[ "$program" == "" ]]; then
-		filemanager=$(find_program default)
-		path=${filename%/*}
-		$filemanager "$path"
+		default=$(find_program default)
+		$default "$program"
 	else
 		$program "$filename"
 	fi
