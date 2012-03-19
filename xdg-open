@@ -45,7 +45,7 @@ else
 	
 	if [[ "$program" == "" ]]; then
 		default=$(find_program default)
-		$default "$program"
+		$default "$filename"
 	else
 		$program "$filename"
 	fi
