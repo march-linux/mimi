@@ -9,7 +9,7 @@ err() {
 usage() {
 	cat <<EOF
 
-Usage: xdg-open [file|url]
+Usage: xdg-open [file|directory|url]
 
 It opens a file according to the extension
 To setup the extension, create ~/.config/mimi/mime.conf
@@ -27,26 +27,33 @@ find_program() {
 CONFIG="$HOME/.config/mimi/mime.conf"
 [[ -f "$CONFIG" ]] || err "No configuration file found."
 
-if [[ "$@" == http* ]]; then
+argument="$@"
+program=""
+
+if [[ "$argument" =~ ^file://(.*) ]]; then
+	# make sure file:// urls are handled just like files
+	argument="${BASH_REMATCH[1]}"
+fi
+
+if [[ "$argument" =~ ^([a-zA-Z]+): ]]; then
 	# handle url
-	browser=$(find_program html)
-	if [[ "$browser" == "" ]]; then
-		err "'html' is not defined in configuration file."
-	else
-		$browser "$@"
-	fi
-else
+	protocol="${BASH_REMATCH[1]}"
+	program="$(find_program "$protocol")"
+elif [[ -f "$argument" ]]; then
 	# handle file
 	filename="$@"
-	[[ -f "$filename" ]] || err "The file does not exist."
-	
-	ext=${filename##*.}
-	program=$(find_program "$ext")
-	
-	if [[ "$program" == "" ]]; then
-		default=$(find_program default)
-		$default "$filename"
-	else
-		$program "$filename"
-	fi
+	ext="${filename##*.}"
+	program="$(find_program "$ext")"
+elif [[ -d "$argument" ]]; then
+	# handle directory
+	program="$(find_program directory)"
+else
+	err "File or directory not found: $@"
 fi
+
+if [[ "$program" == "" ]]; then
+	# default
+	program=$(find_program default)
+fi
+
+$program "$argument"
