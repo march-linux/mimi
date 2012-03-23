@@ -9,13 +9,14 @@ err() {
 usage() {
 	cat <<EOF
 
-Usage: xdg-open [file|directory|url]
+Usage: xdg-open [file|directory|protocol]
 
 It opens a file according to the extension
 To setup the extension, create ~/.config/mimi/mime.conf
 e.g.
 	default:urxvt -e ranger
 	pdf:mupdf
+	ftp:filezilla
 mimi :)
 EOF
 }
@@ -27,28 +28,23 @@ find_program() {
 CONFIG="$HOME/.config/mimi/mime.conf"
 [[ -f "$CONFIG" ]] || err "No configuration file found."
 
-argument="$@"
+arg="$@"
 program=""
 
-if [[ "$argument" =~ ^file://(.*) ]]; then
-	# make sure file:// urls are handled just like files
-	argument="${BASH_REMATCH[1]}"
-fi
-
-if [[ "$argument" =~ ^([a-zA-Z]+): ]]; then
-	# handle url
-	protocol="${BASH_REMATCH[1]}"
-	program="$(find_program "$protocol")"
-elif [[ -f "$argument" ]]; then
+if [[ "$arg" =~ "^([a-zA-Z]+):" ]]; then
+	# handle protocol
+	protocol=${BASH_REMATCH[1]}
+	program=$(find_program "$protocol")
+elif [[ -f "$arg" ]]; then
 	# handle file
 	filename="$@"
 	ext="${filename##*.}"
-	program="$(find_program "$ext")"
-elif [[ -d "$argument" ]]; then
+	program=$(find_program "$ext")
+elif [[ -d "$arg" ]]; then
 	# handle directory
-	program="$(find_program directory)"
+	program=$(find_program directory)
 else
-	err "File or directory not found: $@"
+	err "File or directory not found: $arg"
 fi
 
 if [[ "$program" == "" ]]; then
@@ -56,4 +52,4 @@ if [[ "$program" == "" ]]; then
 	program=$(find_program default)
 fi
 
-$program "$argument"
+$program "$arg"
