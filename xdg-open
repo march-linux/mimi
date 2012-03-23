@@ -31,8 +31,8 @@ CONFIG="$HOME/.config/mimi/mime.conf"
 arg="$@"
 program=""
 
-if [[ "$arg" =~ "^([a-zA-Z]+):" ]]; then
-	# handle protocol
+if [[ "$arg" =~ ^([a-zA-Z]+): && ! "$arg" =~ ^file: ]]; then
+	# handle protocol except file://
 	protocol=${BASH_REMATCH[1]}
 	program=$(find_program "$protocol")
 elif [[ -f "$arg" ]]; then
