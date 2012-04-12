@@ -42,8 +42,12 @@ if [[ "$arg" =~ ^([a-zA-Z]+): ]]; then
 	program=$(find_program "$protocol")
 elif [[ -f "$arg" ]]; then
 	# handle file
-	filename="$@"
-	ext="${filename##*.}"
+	if [[ "$arg" == *.* ]]; then
+		# have file extension
+		ext="${arg##*.}"
+	else
+		ext=""
+	fi
 	program=$(find_program "$ext")
 elif [[ -d "$arg" ]]; then
 	# handle directory
