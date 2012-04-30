@@ -61,4 +61,4 @@ if [[ "$program" == "" ]]; then
 	program=$(find_program default)
 fi
 
-exec $program "$arg"
+$program "$arg" &>/dev/null
