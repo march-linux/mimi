@@ -4,20 +4,20 @@ CONFIG="$HOME/.config/mimi/mime.conf"
 
 find_in_config() {
     [[ -f "$CONFIG" ]] || return
-    line=$(grep "^$1: " "$CONFIG")
+    line=$(grep -m 1 "^$1: " "$CONFIG")
     if [[ $line == "" ]]; then
         type=$(echo $1 | cut -d / -f 1)
-        line=$(grep "^$type/[*]: " "$CONFIG")
+        line=$(grep -m 1 "^$type/[*]: " "$CONFIG")
     fi
     echo $line | cut -d ' ' -f 2-
 }
 
 need_terminal() {
-    grep "^Terminal=true$" "$1"
+    grep -m 1 "^Terminal=true$" "$1"
 }
 
 find_cmd() {
-    grep "^Exec=" "$1" | cut -d = -f 2 | cut -d ' ' -f 1
+    grep -m 1 "^Exec=" /usr/share/applications/libreoffice-impress.desktop | cut -d = -f 2 | cut -d ' ' -f 1
 }
 
 find_terminal() {
