@@ -1,64 +1,85 @@
 #!/bin/bash
 
-err() {
-	echo $1
-	usage
-	exit
+CONFIG="$HOME/.config/mimi/mime.conf"
+
+find_in_config() {
+    [[ -f "$CONFIG" ]] || return
+    line=$(grep "^$1: " "$CONFIG")
+    if [[ $line == "" ]]; then
+        type=$(echo $1 | cut -d / -f 1)
+        line=$(grep "^$type/[*]: " "$CONFIG")
+    fi
+    echo $line | cut -d ' ' -f 2-
+}
+
+need_terminal() {
+    grep "^Terminal=true$" "$1"
+}
+
+find_cmd() {
+    grep "^Exec=" "$1" | cut -d = -f 2 | cut -d ' ' -f 1
+}
+
+find_terminal() {
+    find_app_by Categories TerminalEmulator
+}
+
+find_app_by() {
+    grep "$1=.*$2;" -R /usr/share/applications/ | awk -F : '{ print length($2), $0 }' | sort -n | head -n 1 | cut -d ' ' -f2 | cut -d : -f 1
 }
 
 usage() {
-	cat <<EOF
+    cat <<EOF
 
 Usage: xdg-open [file|directory|protocol]
 
 It opens a file according to the extension
-To setup the extension, create ~/.config/mimi/mime.conf
-e.g.
-	default:urxvt -e ranger
-	pdf:mupdf
-	ftp:filezilla
+To setup the extension, create $CONFIG
+
 mimi :)
 EOF
+exit 1
 }
 
-find_program() {
-	grep "^$1:" "$CONFIG" | cut -d : -f 2
-}
-
-CONFIG="$HOME/.config/mimi/mime.conf"
-[[ -f "$CONFIG" ]] || err "No configuration file found."
-
+protocol=""
 arg="$@"
-program=""
 
 if [[ "$arg" =~ ^file://(.*) ]]; then
-	# strip file://
-	arg="${BASH_REMATCH[1]}"
+    # strip file://
+    arg="${BASH_REMATCH[1]}"
 fi
 
-if [[ "$arg" =~ ^([a-zA-Z]+): ]]; then
-	# handle protocol
-	protocol=${BASH_REMATCH[1]}
-	program=$(find_program "$protocol")
-elif [[ -f "$arg" ]]; then
-	# handle file
-	if [[ "$arg" == *.* ]]; then
-		# have file extension
-		ext="${arg##*.}"
-	else
-		ext=""
-	fi
-	program=$(find_program "$ext")
-elif [[ -d "$arg" ]]; then
-	# handle directory
-	program=$(find_program directory)
+if [[ -e "$arg" ]]; then
+    # file or dir
+    mime=$(file -b --mime-type "$arg")
+    echo "$arg: $mime"
+    app=$(find_in_config $mime)
+    if [[ "$app" != "" ]]; then
+        # has config and mime defined in config
+        exec $app "$arg"
+    else
+        # find our own
+        desktop=$(find_app_by MimeType $mime)
+        if [[ "$desktop" != "" ]]; then
+            app=$(find_cmd $desktop)
+            if [[ $(need_terminal $desktop) != "" && $(find_terminal) != "" ]]; then
+                exec find_terminal -e $app "$arg"
+            else
+                exec $app "$arg"
+            fi
+        else
+            usage
+        fi
+    fi
 else
-	err "File or directory not found: $arg"
+    if [[ "$arg" =~ ^([a-zA-Z]+): ]]; then
+        # handle protocol
+        protocol=${BASH_REMATCH[1]}
+    fi
+    app=$(find_in_config $protocol)
+    if [[ "$app" != "" ]]; then
+        exec $app "$arg"
+    else
+        usage
+    fi
 fi
-
-if [[ "$program" == "" ]]; then
-	# default
-	program=$(find_program default)
-fi
-
-$program "$arg" &>/dev/null
