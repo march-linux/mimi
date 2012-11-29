@@ -3,13 +3,8 @@
 CONFIG="$HOME/.config/mimi/mime.conf"
 
 find_in_config() {
-    [[ -r "$CONFIG" ]] || return
-    line=$(grep -m 1 "^$1: " "$CONFIG")
-    if [[ $line == "" ]]; then
-        type=$(echo $1 | cut -d / -f 1)
-        line=$(grep -m 1 "^$type/[*]: " "$CONFIG")
-    fi
-    echo $line | cut -d ' ' -f 2-
+    [[ -r $CONFIG ]] || return
+    grep -m 1 "^$1" $CONFIG | cut -d ' ' -f 2-
 }
 
 need_terminal() {
@@ -25,7 +20,7 @@ find_terminal() {
 }
 
 find_app_by() {
-    grep -m 1 "$1=.*$2;" -R /usr/share/applications/ | awk -F : -v pat="$2;" '{ print index($2, pat), $1 }' | sort -t ' ' -k 1 -n | head -n 1 | cut -d ' ' -f 2
+    grep -m 1 "^$1=.*$2" -R /usr/share/applications/ | awk -F : -v pat="$2" '{ print index($2, pat), length($2), $1 }' | sort -t ' ' -k1,1n -k2,2n | head -n 1 | cut -d ' ' -f 3
 }
 
 usage() {
@@ -50,14 +45,14 @@ fi
 
 if [[ -e "$arg" ]]; then
     # file or dir
-    mime=$(file -b --mime-type "$arg")
+    first_try=$(file -b --mime-type "$arg")
 elif [[ "$arg" =~ ^([a-zA-Z]+): ]]; then
     # handle protocol
     protocol=${BASH_REMATCH[1]}
     if [[ $protocol == "http" || $protocol == "https" ]]; then
-        mime="text/html"
+        first_try="text/html"
     elif [[ $protocol == "magnet" ]]; then
-        mime="application/x-bittorrent"
+        first_try="application/x-bittorrent"
     else
         usage
     fi
@@ -65,23 +60,25 @@ else
     usage
 fi
 
-echo "$arg: $mime"
-app=$(find_in_config $mime)
-if [[ "$app" != "" ]]; then
-    # has config and mime defined in config
-    exec $app "$arg"
-else
-    # find our own
+second_try=$(echo $first_try | cut -d / -f 1)/
+
+for mime in $first_try $second_try; do
+    echo "$arg: $mime"
+    app=$(find_in_config $mime)
     desktop=$(find_app_by MimeType $mime)
-    echo $desktop
-    if [[ "$desktop" != "" ]]; then
+    if [[ "$app" != "" ]]; then
+        # has config and mime defined in config
+        exec $app "$arg"
+    elif [[ "$desktop" != "" ]]; then
+        # find our own
+        echo $desktop
         app=$(find_cmd $desktop)
         if [[ $(need_terminal $desktop) != "" && $(find_terminal) != "" ]]; then
             exec find_terminal -e $app "$arg"
         else
             exec $app "$arg"
         fi
-    else
-        usage
     fi
-fi
+done
+
+usage
