@@ -25,7 +25,7 @@ find_terminal() {
 }
 
 find_app_by() {
-    grep "$1=.*$2;" -R /usr/share/applications/ | awk -F : '{ print length($2), $0 }' | sort -n | head -n 1 | cut -d ' ' -f2 | cut -d : -f 1
+    grep -m 1 "$1=.*$2;" -R /usr/share/applications/ | awk -F : -v pat="$2" '{ print index($2, pat), $1 }' | sort -t ' ' -k 1 -n | head -n 1 | cut -d ' ' -f 2
 }
 
 usage() {
