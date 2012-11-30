@@ -61,6 +61,9 @@ else
 fi
 
 second_try=$(echo $first_try | cut -d / -f 1)/
+if [[ $second_try == "application/" ]]; then
+    second_try=""
+fi
 
 for mime in $first_try $second_try; do
     echo "$arg: $mime"
