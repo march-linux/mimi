@@ -20,7 +20,7 @@ find_terminal() {
 }
 
 find_app_by() {
-    grep -m 1 "^$1=.*$2" -R /usr/share/applications/ | awk -F : -v pat="$2" '{ print index($2, pat), length($2), $1 }' | sort -t ' ' -k1,1n -k2,2n | head -n 1 | cut -d ' ' -f 3
+    grep -m 1 "^$1=.*$2" -R /usr/share/applications/ | awk -F : -v pat="$2" '{ print index($2, pat), length($2), $1 }' | sort -t ' ' -k1,1n -k2,2nr | head -n 1 | cut -d ' ' -f 3
 }
 
 usage() {
