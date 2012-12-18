@@ -4,22 +4,22 @@ CONFIG="$HOME/.config/mimi/mime.conf"
 
 find_in_config() {
     [[ -r $CONFIG ]] || return
-    grep -m 1 "^$1" $CONFIG | cut -d ' ' -f 2-
+    grep -m 1 "^$1: " "$CONFIG" | cut -d ' ' -f 2-
 }
 
 need_terminal() {
     grep -m 1 "^Terminal=true$" "$1"
 }
 
-find_cmd() {
-    grep -m 1 "^Exec=" $1 | cut -d = -f 2 | cut -d ' ' -f 1
+find_exec_in_desktop_file() {
+    grep -m 1 "^Exec=" "$1" | cut -d = -f 2 | cut -d ' ' -f 1
 }
 
 find_terminal() {
-    find_app_by Categories TerminalEmulator
+    find_exec_in_desktop_file "$(find_desktop_file_by Categories TerminalEmulator)"
 }
 
-find_app_by() {
+find_desktop_file_by() {
     grep -m 1 "^$1=.*$2" -R /usr/share/applications/ | awk -F : -v pat="$2" '{ print index($2, pat), length($2), $1 }' | sort -t ' ' -k1,1n -k2,2nr | head -n 1 | cut -d ' ' -f 3
 }
 
@@ -36,52 +36,86 @@ EOF
 exit 1
 }
 
-arg="$@"
+# 1. ext
+# 2. protocol
+# 3. mime
+# 4. general mime
+# 5. ask
 
-if [[ "$arg" =~ ^file://(.*) ]]; then
+arg="$@"
+ext=""
+protocol=""
+mime=""
+
+if [[ "$arg" =~ "^file://(.*)" ]]; then
     # strip file://
     arg="${BASH_REMATCH[1]}"
+    protocol="file"
 fi
 
 if [[ -e "$arg" ]]; then
     # file or dir
-    first_try=$(file -b --mime-type "$arg")
-elif [[ "$arg" =~ ^([a-zA-Z]+): ]]; then
-    # handle protocol
-    protocol=${BASH_REMATCH[1]}
-    if [[ $protocol == "http" || $protocol == "https" ]]; then
-        first_try="text/html"
-    elif [[ $protocol == "magnet" ]]; then
-        first_try="application/x-bittorrent"
-    else
-        usage
+    mime="$(file -b --mime-type "$arg")"
+    if [[ -f "$arg" ]]; then
+        ext="${arg##*.}"
     fi
-else
-    usage
 fi
 
-second_try=$(echo $first_try | cut -d / -f 1)/
-if [[ $second_try == "application/" ]]; then
-    second_try=""
+# handle protocol
+if [[ "$arg" =~ "^([a-zA-Z]+):" ]]; then
+    # use protocol to guess mime
+    protocol="${BASH_REMATCH[1]}"
+    if [[ "$protocol" == http || "$protocol" == https ]]; then
+        mime=text/html
+    elif [[ "$protocol" == magnet ]]; then
+        mime=application/x-bittorrent
+    elif [[ "$protocol" == irc ]]; then
+        mime=x-scheme-handler/irc
+    fi
 fi
 
-for mime in $first_try $second_try; do
-    echo "$arg: $mime"
-    app=$(find_in_config $mime)
-    desktop=$(find_app_by MimeType $mime)
-    if [[ "$app" != "" ]]; then
-        # has config and mime defined in config
-        exec $app "$arg"
-    elif [[ "$desktop" != "" ]]; then
-        # find our own
-        echo $desktop
-        app=$(find_cmd $desktop)
-        if [[ $(need_terminal $desktop) != "" && $(find_terminal) != "" ]]; then
-            exec find_terminal -e $app "$arg"
-        else
-            exec $app "$arg"
+general_mime="${mime%%/*}/"
+
+# application is too general
+if [[ "$general_mime" == application/ ]]; then
+    general_mime=""
+fi
+
+# 1. ext and 2. protocol
+for search in "$ext" "$protocol"; do
+    if [[ "$search" != "" ]]; then
+        app="$(find_in_config "$search")"
+        if [[ "$app" != "" ]]; then
+            exec "$app" "$arg"
         fi
     fi
 done
+
+terminal="$(find_terminal)"
+# 3. mime and 4. protocol
+for search in "$mime" "$general_mime"; do
+    echo "$search"
+    app="$(find_in_config "$search")"
+    if [[ "$app" != "" ]]; then
+        # has config and mime defined in config
+        exec "$app" "$arg"
+    fi
+    desktop="$(find_desktop_file_by MimeType "$search")"
+    if [[ "$desktop" != "" ]]; then
+        # find our own
+        echo "$desktop"
+        app="$(find_exec_in_desktop_file "$desktop")"
+        if [[ "$(need_terminal "$desktop")" != "" && "$terminal" != "" ]]; then
+            exec "$terminal" -e "$app" "$arg"
+        else
+            exec "$app" "$arg"
+        fi
+    fi
+done
+
+# 5. ask
+if [[ "$terminal" != "" ]]; then
+    "$terminal" -e "$SHELL" -i -c 'read -p "How to open '"$arg"': " choice; exec $choice '"$arg"';'
+fi
 
 usage
