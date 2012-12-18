@@ -114,7 +114,7 @@ done
 
 # 5. ask
 if [[ "$terminal" != "" ]]; then
-    "$terminal" -e "$SHELL" -i -c 'read -p "How to open '"$arg"': " choice; exec $choice '"$arg"';'
+    exec "$terminal" -e xdg-open-ask "$arg"
 fi
 
 usage

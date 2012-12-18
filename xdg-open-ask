@@ -1,0 +1,12 @@
+#!/bin/bash
+
+arg="$@"
+while true; do
+    read -p "How to open '$arg': " choice
+    if [[ "$(which "$choice" 2>/dev/null)" != "" ]]; then
+        break
+    fi
+    echo "command not found; try again"
+done
+exec "$choice" "$arg"
+
