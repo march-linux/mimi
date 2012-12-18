@@ -74,26 +74,25 @@ if [[ "$arg" =~ "^([a-zA-Z]+):" ]]; then
     fi
 fi
 
-general_mime="${mime%%/*}/"
 
 # application is too general
-if [[ "$general_mime" == application/ ]]; then
+if [[ "$mime" == ""  || "$mime" =~ "^application/" ]]; then
     general_mime=""
+else
+    general_mime="${mime%%/*}/"
 fi
 
 # 1. ext and 2. protocol
-for search in "$ext" "$protocol"; do
-    if [[ "$search" != "" ]]; then
-        app="$(find_in_config "$search")"
-        if [[ "$app" != "" ]]; then
-            exec "$app" "$arg"
-        fi
+for search in $ext $protocol; do
+    app="$(find_in_config "$search")"
+    if [[ "$app" != "" ]]; then
+         exec "$app" "$arg"
     fi
 done
 
 terminal="$(find_terminal)"
 # 3. mime and 4. protocol
-for search in "$mime" "$general_mime"; do
+for search in $mime $general_mime; do
     echo "$search"
     app="$(find_in_config "$search")"
     if [[ "$app" != "" ]]; then
