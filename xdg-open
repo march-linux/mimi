@@ -3,7 +3,7 @@
 CONFIG="$HOME/.config/mimi/mime.conf"
 
 find_in_config() {
-    [[ -r $CONFIG ]] || return
+    [[ -r "$CONFIG" ]] || return
     grep -m 1 "^$1: " "$CONFIG" | cut -d ' ' -f 2-
 }
 
