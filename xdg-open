@@ -86,7 +86,7 @@ fi
 for search in $ext $protocol; do
     app="$(find_in_config "$search")"
     if [[ "$app" != "" ]]; then
-         exec "$app" "$arg"
+         exec $app "$arg"
     fi
 done
 
@@ -97,7 +97,7 @@ for search in $mime $general_mime; do
     app="$(find_in_config "$search")"
     if [[ "$app" != "" ]]; then
         # has config and mime defined in config
-        exec "$app" "$arg"
+        exec $app "$arg"
     fi
     desktop="$(find_desktop_file_by MimeType "$search")"
     if [[ "$desktop" != "" ]]; then
