@@ -76,10 +76,10 @@ fi
 
 
 # application is too general
-if [[ "$mime" == ""  || "$mime" =~ ^application/ ]]; then
-    general_mime=""
-else
+if [[ "$mime" =~ ^(audio|image|text|video)/ ]]; then
     general_mime="${mime%%/*}/"
+else
+    general_mime=""
 fi
 
 # 1. ext and 2. protocol
