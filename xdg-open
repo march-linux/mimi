@@ -8,7 +8,7 @@ find_in_config() {
 }
 
 need_terminal() {
-    grep -m 1 "^Terminal=true$" "$1"
+    grep -m 1 -qs "^Terminal=true$" "$1"
 }
 
 find_exec_in_desktop_file() {
@@ -104,7 +104,7 @@ for search in $mime $general_mime; do
         # find our own
         echo "$desktop"
         app="$(find_exec_in_desktop_file "$desktop")"
-        if [[ "$(need_terminal "$desktop")" != "" && "$terminal" != "" ]]; then
+        if need_terminal "$desktop" && [[ "$terminal" != "" ]]; then
             exec "$terminal" -e "$app" "$arg"
         else
             exec "$app" "$arg"
