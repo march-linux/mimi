@@ -2,7 +2,7 @@
 
 arg="$@"
 while true; do
-    read -p "How to open '$arg': " choice
+    read -e -p "How to open '$arg': " choice
     if [[ "$(which "$choice" 2>/dev/null)" != "" ]]; then
         break
     fi
