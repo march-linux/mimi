@@ -42,9 +42,7 @@ EOF
 # 4. general mime
 # 5. ask
 
-if [[ "$@" == "" ]]; then
-    exit 1
-fi
+[[ "$@" == "" ]] && usage
 
 arg="$@"
 ext=""
@@ -121,15 +119,6 @@ for search in $mime $general_mime; do
 done
 
 # 5. ask
-if [[ "$terminal" != "" ]]; then
-    while true; do
-        choice="$(compgen -c | dmenu -p "how to open '$arg'")"
-        if [[ "$(which "$choice" 2>/dev/null)" != "" ]]; then
-            break
-        fi
-    done
-    ("$terminal" -e "$choice" "$arg") &
-    exit 0
-fi
-
-usage
+choice="$(IFS=: && stest -flx $PATH| sort -u | dmenu -p "how to open '$arg'")"
+($choice "$arg") &
+exit 0
