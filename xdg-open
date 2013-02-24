@@ -91,6 +91,7 @@ for search in $ext $protocol; do
     app="$(find_in_config "$search")"
     if [[ "$app" != "" ]]; then
         ($app "$arg") &
+        exit 0
     fi
 done
 
@@ -102,6 +103,7 @@ for search in $mime $general_mime; do
     if [[ "$app" != "" ]]; then
         # has config and mime defined in config
         ($app "$arg") &
+        exit 0
     fi
     desktop="$(find_desktop_file_by MimeType "$search")"
     if [[ "$desktop" != "" ]]; then
@@ -110,8 +112,10 @@ for search in $mime $general_mime; do
         app="$(find_exec_in_desktop_file "$desktop")"
         if need_terminal "$desktop" && [[ "$terminal" != "" ]]; then
             ("$terminal" -e "$app" "$arg") &
+            exit 0
         else
             ("$app" "$arg") &
+            exit 0
         fi
     fi
 done
@@ -125,6 +129,7 @@ if [[ "$terminal" != "" ]]; then
         fi
     done
     ("$terminal" -e "$choice" "$arg") &
+    exit 0
 fi
 
 usage
