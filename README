@@ -15,15 +15,14 @@ for example, I want to define how to open 'text/html'. mime will search in order
 1. 'txt' in your config
 2. <protocol> in your config (i.e. http, ftp, magnet) ...etc.
 3. 'text/html' in your config
-4. 'text/html' in .desktop
-5. 'text/' in your config
+4. 'text/' in your config
+5. 'text/html' in .desktop
 6. 'text/' in .desktop
-7. if mimi still cannot find anything, it will open a terminal and bug you.
+7. if mimi still cannot find anything, it will open dmenu and bug you.
 
 note:
-1. sometimes, mimi is smart enough to figure out protocal based on mime-type when it searches for .desktop.
+1. sometimes, mimi is smart enough to figure out protocol based on mime-type when it searches for .desktop.
 2. sometimes, if an app requires a terminal to run (ncurses programs), mimi is able to find one terminal app in .desktop.
-if anything fails, it will open a terminal and bug you.
 
 =customize=
 this is my own stuff

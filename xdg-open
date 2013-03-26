@@ -36,10 +36,12 @@ EOF
     exit 1
 }
 
+# config
 # 1. ext
 # 2. protocol
 # 3. mime
 # 4. general mime
+# .desktop (mime and general mime)
 # 5. ask
 
 [[ "$@" == "" ]] && usage
@@ -48,7 +50,9 @@ arg="$@"
 ext=""
 protocol=""
 mime=""
+general_mime=""
 
+# fix file://
 if [[ "$arg" =~ ^file://(.*) ]]; then
     # strip file://
     arg="${BASH_REMATCH[1]}"
@@ -67,7 +71,7 @@ if [[ -e "$arg" ]]; then
     fi
 fi
 
-# handle protocol
+# protocol to mime
 if [[ "$arg" =~ ^([a-zA-Z]+): ]]; then
     # use protocol to guess mime
     protocol="${BASH_REMATCH[1]}"
@@ -81,15 +85,13 @@ if [[ "$arg" =~ ^([a-zA-Z]+): ]]; then
 fi
 
 
-# application is too general
+# application mime is specific
 if [[ "$mime" =~ ^(audio|image|text|video)/ ]]; then
     general_mime="${mime%%/*}/"
-else
-    general_mime=""
 fi
 
-# 1. ext and 2. protocol
-for search in $ext $protocol; do
+# config
+for search in $ext $protocol $mime $general_mime; do
     app="$(find_in_config "$search")"
     if [[ "$app" != "" ]]; then
         ($app "$arg") &
@@ -98,15 +100,8 @@ for search in $ext $protocol; do
 done
 
 terminal="$(find_terminal)"
-# 3. mime and 4. protocol
+# .desktop
 for search in $mime $general_mime; do
-    echo "$search"
-    app="$(find_in_config "$search")"
-    if [[ "$app" != "" ]]; then
-        # has config and mime defined in config
-        ($app "$arg") &
-        exit 0
-    fi
     desktop="$(find_desktop_file_by MimeType "$search")"
     if [[ "$desktop" != "" ]]; then
         # find our own
@@ -122,7 +117,9 @@ for search in $mime $general_mime; do
     fi
 done
 
-# 5. ask
-choice="$(IFS=: && stest -flx $PATH| sort -u | dmenu -p "how to open '$arg'")"
-($choice "$arg") &
+# ask
+choice="$(IFS=: && stest -flx $PATH | sort -u | dmenu -p "how to open $arg ($mime)")"
+if [[ "$choice" != "" ]]; then
+    ($choice "$arg") &
+fi
 exit 0
