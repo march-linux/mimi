@@ -62,11 +62,10 @@ fi
 if [[ -e "$arg" ]]; then
     # file or dir
     mime="$(file -b --mime-type "$arg")"
-    if [[ "$mime" == "inode/x-empty" ]]; then
-        mime="text/plain"
-    fi
-
     if [[ -f "$arg" ]]; then
+        if [[ -s "$arg" ]]; then
+            mime="text/plain"
+        fi
         ext="${arg##*.}"
     fi
 fi
