@@ -63,9 +63,8 @@ if [[ -e "$arg" ]]; then
     # file or dir
     mime="$(file -b --mime-type "$arg")"
     if [[ -f "$arg" ]]; then
-        if [[ -s "$arg" ]]; then
-            mime="text/plain"
-        fi
+        # very short file
+        [[ "$mime" == "inode/x-empty" || "$mime" == "application/octet-stream" ]] && mime="text/plain"
         ext="${arg##*.}"
     fi
 fi
