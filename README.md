@@ -12,6 +12,7 @@ The original xdg-open works horribly without DE environment.
 	
 #search order
 for example, I want to define how to open 'text/html'. mime will search in order like this
+
 1. 'txt' in your config
 2. <protocol> in your config (i.e. http, ftp, magnet) ...etc.
 3. 'text/html' in your config
@@ -21,26 +22,28 @@ for example, I want to define how to open 'text/html'. mime will search in order
 7. if mimi still cannot find anything, it will open dmenu and bug you.
 
 note:
+
 1. sometimes, mimi is smart enough to figure out protocol based on mime-type when it searches for .desktop.
 2. sometimes, if an app requires a terminal to run (ncurses programs), mimi is able to find one terminal app in .desktop.
 
 #customize
 this is my own stuff
 
-text/: xterm -e vim
-application/pdf: zathura
-video/: vlc
-image/: feh
-audio/: vlc
-application/x-tar: xterm -e 2a
-application/x-gzip: xterm -e 2a
-application/x-bzip2: xterm -e 2a
-application/x-rar: xterm -e 2a
-application/x-xz: xterm -e 2a
-application/zip: xterm -e 2a
-inode/directory: xterm -e ranger
+    text/: xterm -e vim
+    application/pdf: zathura
+    video/: vlc
+    image/: feh
+    audio/: vlc
+    application/x-tar: xterm -e 2a
+    application/x-gzip: xterm -e 2a
+    application/x-bzip2: xterm -e 2a
+    application/x-rar: xterm -e 2a
+    application/x-xz: xterm -e 2a
+    application/zip: xterm -e 2a
+    inode/directory: xterm -e ranger
 
 it can be simplified by using:
-rar: xterm -e 2a
+    
+    rar: xterm -e 2a
 
 but if you have time, using mime-type is more precise
