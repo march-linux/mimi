@@ -53,9 +53,9 @@ EOF
 # .desktop (mime and general mime)
 # 5. ask
 
-[[ "$*" == "" ]] && usage
+[[ "$1" == "" ]] && usage
 
-arg="$*"
+arg="$1"
 ext=""
 protocol=""
 mime=""
