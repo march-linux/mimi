@@ -20,7 +20,11 @@ find_terminal() {
 }
 
 find_desktop_file_by() {
-    grep -m 1 "^$1=.*$2" -R /usr/share/applications/ | awk -F : -v pat="$2" '{ print index($2, pat), length($2), $1 }' | sort -t ' ' -k1,1n -k2,2nr | head -n 1 | cut -d ' ' -f 3
+    SEARCHPATH="/usr/share/applications/"
+    if [[ -d "$HOME/.local/share/applications" ]]; then
+        SEARCHPATH="$HOME/.local/share/applications $SEARCHPATH"
+    fi
+    grep -m 1 "^$1=.*$2" -R $SEARCHPATH | awk -F : -v pat="$2" '{ print index($2, pat), length($2), $1 }' | sort -t ' ' -k1,1n -k2,2nr | head -n 1 | cut -d ' ' -f 3
 }
 
 url_decode() {
