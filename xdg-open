@@ -57,7 +57,7 @@ EOF
 # .desktop (mime and general mime)
 # 5. ask
 
-[[ "$1" == "" ]] && usage
+[[ ! "$1" ]] && usage
 
 arg="$1"
 ext=""
@@ -102,18 +102,18 @@ fi
 # config
 for search in $ext $protocol $mime $general_mime; do
     app="$(find_in_config "$search")"
-    [[ "$app" != "" ]] && fork_run $app "$arg"
+    [[ "$app" ]] && fork_run $app "$arg"
 done
 
 terminal="$(find_terminal)"
 # .desktop
 for search in $mime $general_mime; do
     desktop="$(find_desktop_file_by MimeType "$search")"
-    if [[ "$desktop" != "" ]]; then
+    if [[ "$desktop" ]]; then
         # find our own
         echo "$desktop"
         app="$(find_exec_in_desktop_file "$desktop")"
-        if need_terminal "$desktop" && [[ "$terminal" != "" ]]; then
+        if need_terminal "$desktop" && [[ "$terminal" ]]; then
             fork_run "$terminal" -e "$app" "$arg"
         else
             fork_run "$app" "$arg"
@@ -123,4 +123,4 @@ done
 
 # ask
 choice="$(IFS=: && stest -flx $PATH | sort -u | dmenu -p "how to open $arg ($mime)")"
-[[ "$choice" != "" ]] && fork_run $choice "$arg"
+[[ "$choice" ]] && fork_run $choice "$arg"
