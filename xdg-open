@@ -12,7 +12,7 @@ need_terminal() {
 }
 
 find_exec_in_desktop_file() {
-    grep -m 1 "^Exec=" "$1" | cut -d = -f 2 | cut -d ' ' -f 1
+    awk -F '[= ]' '$1 == "Exec" {print $2; exit}' "$1"
 }
 
 find_terminal() {
@@ -24,7 +24,7 @@ find_desktop_file_by() {
     if [[ -d "$HOME/.local/share/applications" ]]; then
         SEARCHPATH="$HOME/.local/share/applications $SEARCHPATH"
     fi
-    grep -m 1 "^$1=.*$2" -R $SEARCHPATH | awk -F : -v pat="$2" '{ print index($2, pat), length($2), $1 }' | sort -t ' ' -k1,1n -k2,2nr | head -n 1 | cut -d ' ' -f 3
+    grep -m 1 "^$1=.*$2" -R $SEARCHPATH | awk -F : -v pat="$2" '{ print index($2, pat), length($2), $1 }' | sort -t ' ' -k1,1n -k2,2nr | awk '{ print $3; exit }'
 }
 
 url_decode() {
