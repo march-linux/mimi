@@ -8,15 +8,11 @@ find_in_config() {
 }
 
 need_terminal() {
-    grep -m 1 -qs "^Terminal=true$" "$1"
+    grep -m 1 -qs "^Terminal=true$"
 }
 
 find_exec_in_desktop_file() {
     awk -F '[= ]' '$1 == "Exec" {print $2; exit}'
-}
-
-find_terminal() {
-    find_desktop_file_by Categories TerminalEmulator | find_exec_in_desktop_file
 }
 
 find_desktop_file_by() {
@@ -38,7 +34,7 @@ fork_run() {
 }
 
 has() {
-    type "$1" 1>/dev/null 2>&1
+    type "$@" 1>/dev/null 2>&1
 }
 
 usage() {
@@ -62,9 +58,9 @@ EOF
 # .desktop (mime and general mime)
 # 5. ask
 
-[[ ! "$1" ]] && usage
+[[ ! "$*" ]] && usage
 
-arg="$1"
+arg="$*"
 ext=""
 protocol=""
 mime=""
@@ -112,15 +108,16 @@ for search in $ext $protocol $mime $general_mime; do
     [[ "${app[*]}" ]] && fork_run "${app[@]}" "$arg"
 done
 
-terminal="$(find_terminal)"
+[[ "$TERM" ]] || TERM="$(find_in_config TERM)"
 # .desktop
 for search in $mime $general_mime; do
     desktop="$(find_desktop_file_by MimeType "$search")"
     if [[ "$desktop" ]]; then
         echo "$desktop"
-        app=($(find_exec_in_desktop_file <<<"$desktop"))
-        if need_terminal "$desktop" && [[ "$terminal" ]]; then
-            fork_run "$terminal" -e "${app[@]}" "$arg"
+        app=($(find_exec_in_desktop_file <"$desktop"))
+        if need_terminal <"$desktop"; then
+            echo "term: $TERM"
+            [[ "$TERM" ]] && fork_run "$TERM" -e "${app[@]}" "$arg"
         else
             fork_run "${app[@]}" "$arg"
         fi
