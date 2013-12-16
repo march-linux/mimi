@@ -34,7 +34,7 @@ fork_run() {
 }
 
 has() {
-    type "$@" 1>/dev/null 2>&1
+    type "$@" &>/dev/null
 }
 
 usage() {
@@ -100,7 +100,7 @@ fi
 
 
 # application mime is specific
-[[ "$mime" =~ ^(audio|image|text|video)/ ]] && general_mime="${mime%%/*}/"
+[[ "$mime" =~ ^(audio|image|text|video)/ ]] && general_mime="${BASH_REMATCH[1]}/"
 
 # config
 for search in $ext $protocol $mime $general_mime; do
