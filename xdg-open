@@ -1,53 +1,53 @@
 #!/bin/bash
 
-CONFIG="$HOME/.config/mimi/mime.conf"
+readonly CONFIG="$HOME/.config/mimi/mime.conf"
 
 find_in_config() {
-    [[ -f "$CONFIG" ]] || return
-    grep -m 1 "^$1: " "$CONFIG" | cut -d ' ' -f 2-
+	[[ -f "$CONFIG" ]] || return
+	grep -m 1 "^$1: " "$CONFIG" | cut -d ' ' -f 2-
 }
 
 need_terminal() {
-    grep -m 1 -qs "^Terminal=true$"
+	grep -m 1 -qs "^Terminal=true$"
 }
 
 find_exec_in_desktop_file() {
-    awk -F '[= ]' '$1 == "Exec" {print $2; exit}'
+	awk -F '[= ]' '$1 == "Exec" {print $2; exit}'
 }
 
 find_desktop_file_by() {
-    local path=(/usr/share/applications/)
-    if [[ -d "$HOME/.local/share/applications" ]]; then
-        path+=("$HOME/.local/share/applications")
-    fi
-    grep -m 1 "^$1=.*$2" -R "${path[@]}" | awk -F : -v pat="$2" '{ print index($2, pat), length($2), $1 }' | sort -t ' ' -k1,1n -k2,2nr | awk '{ print $3; exit }'
+	local path=(/usr/share/applications/)
+	if [[ -d "$HOME/.local/share/applications" ]]; then
+		path+=("$HOME/.local/share/applications")
+	fi
+	grep -m 1 "^$1=.*$2" -R "${path[@]}" | awk -F : -v pat="$2" '{ print index($2, pat), length($2), $1 }' | sort -t ' ' -k1,1n -k2,2nr | awk '{ print $3; exit }'
 }
 
 url_decode() {
-    echo -e "$(sed 's/%\([a-f0-9A-F]\{2\}\)/\\x\1/g')"
+	echo -e "$(sed 's/%\([a-f0-9A-F]\{2\}\)/\\x\1/g')"
 }
 
 fork_run() {
-    echo "$*"
-    "$@" &>/dev/null &
-    exit 0
+	echo "$*"
+	"$@" &>/dev/null &
+	exit 0
 }
 
 has() {
-    type "$@" &>/dev/null
+	type "$@" &>/dev/null
 }
 
 usage() {
-    cat <<EOF
+	cat <<EOF
 
-    Usage: xdg-open [file|directory|protocol]
+	Usage: xdg-open [file|directory|protocol]
 
-    It opens a file according to the extension
-    To setup the extension, create $CONFIG
+	It opens a file according to the extension
+	To setup the extension, create $CONFIG
 
-    mimi :)
+	mimi :)
 EOF
-    exit 1
+exit 1
 }
 
 # config
@@ -68,64 +68,66 @@ general_mime=""
 
 # fix file://
 if [[ "$arg" =~ ^file://(.*)$ ]]; then
-    # strip file://
-    arg="$(url_decode <<<"${BASH_REMATCH[1]}")"
-    protocol=file
+	# strip file://
+	arg="$(url_decode <<<"${BASH_REMATCH[1]}")"
+	protocol=file
 fi
 
 if [[ -e "$arg" ]]; then
-    # file or dir
-    mime="$(file -b --mime-type "$arg")"
-    if [[ -f "$arg" ]]; then
-        # very short file
-        [[ "$mime" =~ ^(inode/x-empty|application/octet-stream)$ ]] && mime=text/plain
-        ext="$(tr [:upper:] [:lower:] <<< "${arg##*.}")"
-    fi
+	# file or dir
+	mime="$(file -b --mime-type "$arg")"
+	if [[ -f "$arg" ]]; then
+		# very short file
+		[[ "$mime" =~ ^(inode/x-empty|application/octet-stream)$ ]] && mime=text/plain
+		ext="$(tr '[:upper:]' '[:lower:]' <<< "${arg##*.}")"
+	fi
 fi
 
 # protocol to mime ext
 if [[ "$arg" =~ ^([a-zA-Z]+): ]]; then
-    # use protocol to guess mime ext
-    protocol="${BASH_REMATCH[1]}"
-    if [[ "$protocol" =~ ^https?$ ]]; then
-        mime=text/html
-        ext=html
-    elif [[ "$protocol" == magnet ]]; then
-        mime=application/x-bittorrent
-        ext=torrent
-    elif [[ "$protocol" == irc ]]; then
-        mime=x-scheme-handler/irc
-    fi
+	# use protocol to guess mime ext
+	protocol="${BASH_REMATCH[1]}"
+	if [[ "$protocol" =~ ^https?$ ]]; then
+		mime=text/html
+		ext=html
+	elif [[ "$protocol" == magnet ]]; then
+		mime=application/x-bittorrent
+		ext=torrent
+	elif [[ "$protocol" == irc ]]; then
+		mime=x-scheme-handler/irc
+	fi
 fi
 
 
 # application mime is specific
 [[ "$mime" =~ ^(audio|image|text|video)/ ]] && general_mime="${BASH_REMATCH[1]}/"
 
+has "$TERM" || TERM="$(find_in_config TERM)"
+
 # config
 for search in $ext $protocol $mime $general_mime; do
-    app=($(find_in_config "$search"))
-    [[ "${app[*]}" ]] && fork_run "${app[@]}" "$arg"
+	app=($(find_in_config "$search"))
+	[[ "${app[0]}" == TERM ]] && has "$TERM" && app[0]="$TERM"
+	[[ "${app[*]}" ]] && fork_run "${app[@]}" "$arg"
 done
 
-[[ "$TERM" ]] || TERM="$(find_in_config TERM)"
 # .desktop
 for search in $mime $general_mime; do
-    desktop="$(find_desktop_file_by MimeType "$search")"
-    if [[ "$desktop" ]]; then
-        echo "$desktop"
-        app=($(find_exec_in_desktop_file <"$desktop"))
-        if need_terminal <"$desktop"; then
-            echo "term: $TERM"
-            [[ "$TERM" ]] && fork_run "$TERM" -e "${app[@]}" "$arg"
-        else
-            fork_run "${app[@]}" "$arg"
-        fi
-    fi
+	desktop="$(find_desktop_file_by MimeType "$search")"
+	if [[ "$desktop" ]]; then
+		echo "$desktop"
+		app=($(find_exec_in_desktop_file <"$desktop"))
+		if need_terminal <"$desktop"; then
+			echo "term: $TERM"
+			has "$TERM" && fork_run "$TERM" -e "${app[@]}" "$arg"
+		else
+			fork_run "${app[@]}" "$arg"
+		fi
+	fi
 done
 
 # ask
 if has dmenu; then
-    app=($(IFS=: && stest -flx $PATH | sort -u | dmenu -p "how to open $arg"))
-    [[ "${app[*]}" ]] && fork_run "${app[@]}" "$arg"
+	app=($(IFS=: && stest -flx $PATH | sort -u | dmenu -p "how to open $arg"))
+	[[ "${app[*]}" ]] && fork_run "${app[@]}" "$arg"
 fi
