@@ -77,8 +77,6 @@ if [[ -e "$arg" ]]; then
 	# file or dir
 	mime="$(file -b --mime-type "$arg")"
 	if [[ -f "$arg" ]]; then
-		# very short file
-		[[ "$mime" =~ ^(inode/x-empty|application/octet-stream)$ ]] && mime=text/plain
 		ext="$(tr '[:upper:]' '[:lower:]' <<< "${arg##*.}")"
 	fi
 fi
