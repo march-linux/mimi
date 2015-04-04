@@ -17,9 +17,7 @@ find_exec_in_desktop_file() {
 
 find_desktop_file_by() {
 	local path=(/usr/share/applications/)
-	if [[ -d "$HOME/.local/share/applications" ]]; then
-		path+=("$HOME/.local/share/applications")
-	fi
+	[[ -d "$HOME/.local/share/applications" ]] && path+=("$HOME/.local/share/applications")
 	grep -m 1 "^$1=.*$2" -R "${path[@]}" | awk -F : -v pat="$2" '{ print index($2, pat), length($2), $1 }' | sort -t ' ' -k1,1n -k2,2nr | awk '{ print $3; exit }'
 }
 
@@ -38,7 +36,7 @@ has() {
 }
 
 usage() {
-	cat <<EOF
+	cat <<-EOF
 
 	Usage: xdg-open [file|directory|protocol]
 
@@ -46,8 +44,8 @@ usage() {
 	To setup the extension, create $CONFIG
 
 	mimi :)
-EOF
-exit 1
+	EOF
+	exit 1
 }
 
 # config
@@ -85,15 +83,19 @@ fi
 if [[ "$arg" =~ ^([a-zA-Z]+): ]]; then
 	# use protocol to guess mime ext
 	protocol="${BASH_REMATCH[1]}"
-	if [[ "$protocol" =~ ^https?$ ]]; then
-		mime=text/html
-		ext=html
-	elif [[ "$protocol" == magnet ]]; then
-		mime=application/x-bittorrent
-		ext=torrent
-	elif [[ "$protocol" == irc ]]; then
-		mime=x-scheme-handler/irc
-	fi
+	case "$protocol" in
+		http|https)
+			mime=text/html
+			ext=html
+			;;
+		magnet)
+			mime=application/x-bittorrent
+			ext=torrent
+			;;
+		irc)
+			mime=x-scheme-handler/irc
+			;;
+	esac
 fi
 
 
