@@ -31,7 +31,7 @@ fork_run() {
 	exit 0
 }
 
-has() {
+exist() {
 	type "$@" &>/dev/null
 }
 
@@ -102,12 +102,12 @@ fi
 # application mime is specific
 [[ "$mime" =~ ^(audio|image|text|video)/ ]] && general_mime="${BASH_REMATCH[1]}/"
 
-has "$TERM" || TERM="$(find_in_config TERM)"
+exist "$TERM" || TERM="$(find_in_config TERM)"
 
 # config
 for search in $ext $protocol $mime $general_mime; do
 	app=($(find_in_config "$search"))
-	[[ "${app[0]}" == TERM ]] && has "$TERM" && app[0]="$TERM"
+	[[ "${app[0]}" == TERM ]] && exist "$TERM" && app[0]="$TERM"
 	[[ "${app[*]}" ]] && fork_run "${app[@]}" "$arg"
 done
 
@@ -119,7 +119,7 @@ for search in $mime $general_mime; do
 		app=($(find_exec_in_desktop_file <"$desktop"))
 		if need_terminal <"$desktop"; then
 			echo "term: $TERM"
-			has "$TERM" && fork_run "$TERM" -e "${app[@]}" "$arg"
+			exist "$TERM" && fork_run "$TERM" -e "${app[@]}" "$arg"
 		else
 			fork_run "${app[@]}" "$arg"
 		fi
@@ -127,7 +127,7 @@ for search in $mime $general_mime; do
 done
 
 # ask
-if has dmenu; then
+if exist dmenu; then
 	app=($(IFS=: && stest -flx $PATH | sort -u | dmenu -p "how to open $arg"))
 	[[ "${app[*]}" ]] && fork_run "${app[@]}" "$arg"
 fi
