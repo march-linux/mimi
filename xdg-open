@@ -73,7 +73,7 @@ fi
 
 if [[ -e "$arg" ]]; then
 	# file or dir
-	mime="$(file -b --mime-type "$arg")"
+	mime="$(file -ib "$arg" | cut -d';' -f1)"
 	if [[ -f "$arg" ]]; then
 		ext="$(tr '[:upper:]' '[:lower:]' <<< "${arg##*.}")"
 	fi
