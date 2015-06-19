@@ -8,7 +8,7 @@ find_in_config() {
 }
 
 need_terminal() {
-	grep -m 1 -q "^Terminal=true$"
+	grep -m 1 -q '^Terminal=true$'
 }
 
 find_exec_in_desktop_file() {
@@ -59,10 +59,10 @@ usage() {
 [[ ! "$*" ]] && usage
 
 arg="$*"
-ext=""
-protocol=""
-mime=""
-general_mime=""
+ext=''
+protocol=''
+mime=''
+general_mime=''
 
 # fix file://
 if [[ "$arg" =~ ^file://(.*)$ ]]; then
@@ -128,6 +128,6 @@ done
 
 # ask
 if exist dmenu; then
-	app=($(IFS=: && stest -flx $PATH | sort -u | dmenu -p "how to open $arg"))
+	app=($(IFS=: stest -flx $PATH | sort -u | dmenu -p "how to open $arg"))
 	[[ "${app[*]}" ]] && fork_run "${app[@]}" "$arg"
 fi
