@@ -8,7 +8,7 @@ find_in_config() {
 }
 
 need_terminal() {
-	grep -m 1 -qs "^Terminal=true$"
+	grep -m 1 -q "^Terminal=true$"
 }
 
 find_exec_in_desktop_file() {
