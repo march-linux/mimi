@@ -80,7 +80,7 @@ if [[ -e "$arg" ]]; then
 fi
 
 # protocol to mime ext
-if [[ "$arg" =~ ^([a-zA-Z]+): ]]; then
+if [[ "$arg" =~ ^([a-zA-Z-]+): ]]; then
 	# use protocol to guess mime ext
 	protocol="${BASH_REMATCH[1]}"
 	case "$protocol" in
