@@ -65,7 +65,7 @@ mime=''
 general_mime=''
 
 # fix file://
-if [[ "$arg" =~ ^file://(.*)$ ]]; then
+if [[ "$arg" =~ ^file://([^#]*)#.*$ ]]; then
 	# strip file://
 	arg="$(url_decode <<<"${BASH_REMATCH[1]}")"
 	protocol=file
