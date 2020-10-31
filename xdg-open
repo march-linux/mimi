@@ -98,6 +98,8 @@ if [[ "$arg" =~ ^([a-zA-Z-]+): ]]; then
 	esac
 fi
 
+# executable with arguments
+[[ ! "$mime" ]] && [[ -x "$1" ]] && mime="$(file -b --mime-type "$1")"
 
 # application mime is specific
 [[ "$mime" =~ ^(audio|image|text|video)/ ]] && general_mime="${BASH_REMATCH[1]}/"
