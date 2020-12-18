@@ -64,6 +64,12 @@ protocol=''
 mime=''
 general_mime=''
 
+# fix file://.html#section
+if [[ "$arg" =~ ^file://([^#]*\.html)#.*$ ]]; then
+  protocol=file
+  mime=text/html
+  ext=html
+
 # fix file://
 if [[ "$arg" =~ ^file://(.*)$ ]]; then
 	# strip file://
